@@ -7,3 +7,4 @@ __pycache__/
 results/saved_models/*.pt
 results/logs/*.log
 docs/
+results/predictions/*.npy
