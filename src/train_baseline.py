@@ -6,31 +6,22 @@ import torch
 import torch.nn as nn
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, roc_auc_score, confusion_matrix
 from model_baseline import BaselineMLP
-
-
-RANDOM_STATE = 42
-EPOCHS = 20
-LEARNING_RATE = 1e-3
-
-
-def ensure_dir(path):
-    if path:
-        os.makedirs(path, exist_ok=True)
-
-
-def compute_far(y_true, y_pred):
-    tn, fp, fn, tp = confusion_matrix(y_true, y_pred).ravel()
-    return fp / (fp + tn) if (fp + tn) > 0 else 0.0
+from config import EPOCHS, LEARNING_RATE, RANDOM_STATE
+from utils import ensure_dir, set_all_seeds, compute_far
 
 
 def main(args):
+    set_all_seeds()
+
     train_df = pd.read_csv(args.train)
     test_df = pd.read_csv(args.test)
 
-    X_train = torch.tensor(train_df.drop(columns=["label"]).values, dtype=torch.float32)
+    X_train = torch.tensor(train_df.drop(
+        columns=["label"]).values, dtype=torch.float32)
     y_train = torch.tensor(train_df["label"].values, dtype=torch.long)
 
-    X_test = torch.tensor(test_df.drop(columns=["label"]).values, dtype=torch.float32)
+    X_test = torch.tensor(test_df.drop(
+        columns=["label"]).values, dtype=torch.float32)
     y_test = torch.tensor(test_df["label"].values, dtype=torch.long)
 
     model = BaselineMLP(X_train.shape[1])
@@ -76,9 +67,12 @@ def main(args):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--train", default="data/processed/train_processed.csv")
+    parser.add_argument(
+        "--train", default="data/processed/train_processed.csv")
     parser.add_argument("--test", default="data/processed/test_processed.csv")
-    parser.add_argument("--output", default="results/saved_models/baseline_mlp.pt")
-    parser.add_argument("--metrics_out", default="results/tables/baseline_metrics.json")
+    parser.add_argument(
+        "--output", default="results/saved_models/baseline_mlp.pt")
+    parser.add_argument(
+        "--metrics_out", default="results/tables/baseline_metrics.json")
     args = parser.parse_args()
     main(args)
