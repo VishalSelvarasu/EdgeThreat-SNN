@@ -86,16 +86,16 @@ The main outputs are written to:
 
 Current results on the processed NSL-KDD test set:
 
-| Model | Accuracy | Precision | Recall | F1-score | ROC-AUC | FAR | Latency (ms) | Avg Spike Activity |
-|---|---:|---:|---:|---:|---:|---:|---:|---:|
-| Baseline MLP | 0.7872 | 0.9590 | 0.6542 | 0.7778 | 0.9176 | 0.0370 | 2.92 | - |
-| EdgeThreat-SNN | 0.7131 | 0.9580 | 0.5187 | 0.6730 | 0.8680 | 0.0301 | 181.18 | 0.0666 |
+| Model | Accuracy | Precision | Recall | F1-score | ROC-AUC | FAR | Latency (ms) |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| Baseline MLP | 0.750 | 0.975 | 0.576 | 0.724 | 0.922 | 0.019 | 3.9 |
+| EdgeThreat-SNN | 0.800 | 0.918 | 0.713 | 0.802 | 0.871 | 0.084 | 214.6 |
 
 ## Result summary
 
-On the current setup, the baseline MLP performs better overall than the SNN. It reaches higher recall, F1-score, and ROC-AUC on the NSL-KDD test set.
+The SNN achieves higher accuracy (80.0% vs 75.0%), better recall (71.3% vs 57.6%), and a stronger F1-score (0.802 vs 0.724), meaning it catches more attacks overall. The baseline MLP maintains superior precision (97.5% vs 91.8%) and a much lower false alarm rate (1.9% vs 8.4%), which matters for operational deployment where alert fatigue is a real concern. The baseline is also substantially faster at inference time (3.9ms vs 214.6ms).
 
-The SNN keeps similarly high precision and slightly lowers the false alarm rate, but it misses more attacks and is much slower in the current CPU-based run. At this stage, the SNN is better treated as the experimental part of the project, while the baseline is the stronger practical model.
+This trade-off is the key takeaway: the SNN shows better detection coverage, while the baseline is more conservative and efficient. For a production IDS, the choice between them would depend on whether catching more attacks or minimizing false alarms is the higher priority.
 
 ## Limitations
 

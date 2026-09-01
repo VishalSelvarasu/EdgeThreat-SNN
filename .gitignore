@@ -6,3 +6,4 @@ __pycache__/
 .DS_Store
 results/saved_models/*.pt
 results/logs/*.log
+docs/

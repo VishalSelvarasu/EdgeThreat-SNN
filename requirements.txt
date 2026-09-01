@@ -1,9 +1,7 @@
-torch
-numpy
-pandas
-scikit-learn
-matplotlib
-seaborn
-joblib
-snntorch
-gradio
+torch==2.7.0
+snntorch==0.9.4
+scikit-learn==1.7.0
+numpy==2.2.0
+pandas==2.3.0
+gradio==5.18.0
+joblib==1.5.0
