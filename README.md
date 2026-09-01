@@ -1,33 +1,58 @@
 # EdgeThreat-SNN
 
-EdgeThreat-SNN is an intrusion detection project that compares a baseline multilayer perceptron (MLP) with a spiking neural network (SNN) on the NSL-KDD dataset. The project is built around one complete workflow: preprocess the dataset, train both models, evaluate them on the same test split, and compare the results.
+EdgeThreat-SNN is a reproducible intrusion-detection project that compares a conventional multilayer perceptron (MLP) with a spiking neural network (SNN) on the NSL-KDD dataset.
+
+The project evaluates both models using the same preprocessing workflow and held-out test split. It explores a practical question for edge security: can an event-driven spiking model provide useful attack-detection coverage while operating under the constraints that matter for resource-limited environments?
 
 ## Overview
 
-The main focus of this project is to test whether a simple event-driven spiking model can be used in a practical intrusion detection pipeline. Instead of treating the SNN as a standalone idea, the repository compares it directly against a standard neural baseline under the same preprocessing and evaluation setup.
+Intrusion-detection systems must balance two competing goals:
 
-The task is binary intrusion detection:
-- `normal` -> 0
-- `attack` -> 1
+- Detect as many malicious events as possible.
+- Avoid excessive false alarms that create alert fatigue for security teams.
+
+This repository implements an end-to-end experimental workflow:
+
+1. Preprocess NSL-KDD network-connection records.
+2. Train a baseline MLP classifier.
+3. Train an event-driven EdgeThreat-SNN classifier using rate-encoded spike inputs.
+4. Evaluate both models on the same held-out test set.
+5. Save predictions, probability scores, metrics, confusion matrices, and ROC curves for reproducible comparison.
+
+The project frames the SNN as an experimental edge-oriented intrusion detector, not as a universal replacement for conventional neural models.
+
+## Task Definition
+
+The current experiment uses binary intrusion detection:
+
+| Class | Label | Meaning |
+|---|---:|---|
+| Normal | `0` | Benign network connection |
+| Attack | `1` | Malicious or anomalous network connection |
 
 ## Dataset
 
-This project uses the **NSL-KDD** dataset.
+This project uses the **NSL-KDD** dataset, a widely used benchmark for network intrusion-detection research.
 
 Files used:
+
 - `KDDTrain+.txt`
 - `KDDTest+.txt`
 
-During preprocessing:
-- explicit NSL-KDD column names are assigned,
-- the `difficulty` column is removed,
-- categorical features are one-hot encoded,
-- numerical features are scaled,
-- processed train and test CSV files are saved.
+During preprocessing, the pipeline:
+
+- Assigns explicit NSL-KDD feature-column names.
+- Removes the `difficulty` column.
+- Converts the original labels into binary normal/attack labels.
+- One-hot encodes categorical attributes.
+- Scales numerical features.
+- Saves aligned processed train and test CSV files.
+
+> **Dataset note:** NSL-KDD is useful for controlled benchmarking, but it is a legacy dataset and does not fully represent modern enterprise, cloud, or IoT traffic. The results should therefore be interpreted as a reproducible proof of concept rather than production-readiness evidence.
 
 ## Setup
 
-Create a virtual environment and install the required packages.
+Create and activate a virtual environment, then install the project dependencies.
 
 ### Windows PowerShell
 
@@ -45,76 +70,130 @@ source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
-## Running the project
+## Running the Project
 
-Preprocess the dataset:
+Run the commands below from the repository root.
+
+### 1. Preprocess the dataset
 
 ```powershell
 python src/preprocess.py
 ```
 
-Train the baseline model:
+### 2. Train the baseline MLP
 
 ```powershell
 python src/train_baseline.py
 ```
 
-Train the spiking model:
+### 3. Train EdgeThreat-SNN
 
 ```powershell
 python src/train_snn.py
 ```
 
-Evaluate both models:
+### 4. Evaluate both models
 
 ```powershell
 python src/evaluate.py
 ```
 
-Generate the comparison table:
+This step saves metrics as well as the exact test labels, predicted classes, and predicted probabilities used for the plots.
+
+### 5. Generate evaluation visualizations
+
+```powershell
+python src/plot_results.py
+```
+
+### 6. Generate the comparison table
 
 ```powershell
 python src/comparison_table.py
 ```
 
-The main outputs are written to:
-- `data/processed/`
-- `results/saved_models/`
-- `results/tables/`
+## Output Structure
+
+```text
+data/processed/              # Processed NSL-KDD train and test CSV files
+results/saved_models/        # Trained MLP and SNN model weights
+results/predictions/         # Saved labels, predictions, and probability scores
+results/tables/              # Evaluation metrics and comparison tables
+results/figures/             # Confusion matrices and ROC curves
+```
 
 ## Results
 
-Current results on the processed NSL-KDD test set:
+Results below were produced on the processed NSL-KDD test set.
 
 | Model | Accuracy | Precision | Recall | F1-score | ROC-AUC | FAR | Latency (ms) |
 |---|---:|---:|---:|---:|---:|---:|---:|
 | Baseline MLP | 0.750 | 0.975 | 0.576 | 0.724 | 0.922 | 0.019 | 3.9 |
 | EdgeThreat-SNN | 0.800 | 0.918 | 0.713 | 0.802 | 0.871 | 0.084 | 214.6 |
 
-## Result summary
+### Evaluation Visualizations
 
-The SNN achieves higher accuracy (80.0% vs 75.0%), better recall (71.3% vs 57.6%), and a stronger F1-score (0.802 vs 0.724), meaning it catches more attacks overall. The baseline MLP maintains superior precision (97.5% vs 91.8%) and a much lower false alarm rate (1.9% vs 8.4%), which matters for operational deployment where alert fatigue is a real concern. The baseline is also substantially faster at inference time (3.9ms vs 214.6ms).
+The following row-normalized confusion matrices and ROC curves are generated directly from the saved held-out test labels, model predictions, and probability scores.
 
-This trade-off is the key takeaway: the SNN shows better detection coverage, while the baseline is more conservative and efficient. For a production IDS, the choice between them would depend on whether catching more attacks or minimizing false alarms is the higher priority.
+![Comparison of baseline MLP and EdgeThreat-SNN evaluation results](results/figures/model_comparison.png)
+
+## Interpretation
+
+The two models make different operational trade-offs:
+
+- **Baseline MLP:** The MLP has a higher ROC-AUC of 0.922, higher precision, and a much lower false-alarm rate of about 1.9%. It is also substantially faster in this CPU-based measurement. These properties make it the stronger choice when alert volume, inference speed, and conservative classification are priorities.
+
+- **EdgeThreat-SNN:** The SNN achieves higher attack recall, detecting about 71.3% of attacks compared with 57.6% for the baseline. It also achieves a higher F1-score. However, it creates more false alerts, with a false-alarm rate of about 8.4%, and it is slower in the current CPU implementation.
+
+The central result is therefore not that one model is universally better. The SNN favors broader attack detection coverage, while the MLP offers stronger ranking performance, fewer false alarms, and lower latency. A real deployment would choose between these behaviours based on the security cost of missed attacks versus unnecessary alerts.
+
+## Reproducibility
+
+The evaluation pipeline saves its artifacts to `results/predictions/`:
+
+```text
+y_true.npy
+baseline_preds.npy
+baseline_probs.npy
+snn_preds.npy
+snn_probs.npy
+```
+
+`src/plot_results.py` loads these files to generate the confusion matrices and ROC curves. This ensures that the visualizations are based on actual model outputs rather than manually entered summary values.
 
 ## Limitations
 
-- The current SNN is a small prototype and has not been tuned heavily.
-- The task is binary intrusion detection, not full attack-category classification.
-- Latency was measured on a local CPU setup.
-- The project uses structured intrusion data, not true event-camera surveillance data.
+- The SNN is a compact prototype and has not undergone extensive architecture or hyperparameter optimization.
+- The current task is binary normal-versus-attack classification rather than multiclass attack-category detection.
+- Latency was measured on a local CPU environment and should not be interpreted as neuromorphic-hardware performance.
+- Rate encoding and CPU-based SNN simulation introduce overhead that would differ on dedicated neuromorphic hardware.
+- NSL-KDD is a benchmark dataset and does not fully reflect contemporary network traffic, adversarial behavior, or deployment conditions.
+- The project analyzes structured network-connection features; it does not process event-camera or physical surveillance data.
 
-## Future work
+## Future Work
 
-- tune the SNN architecture and number of time steps,
-- try other spike-encoding methods,
-- extend the task to multiclass attack detection,
-- add confusion matrices and ROC plots,
-- test on additional intrusion-detection datasets.
+- Tune the SNN architecture, threshold parameters, and number of simulation time steps.
+- Compare rate encoding with latency, temporal, and population-based spike-encoding strategies.
+- Extend the binary task to multiclass detection of NSL-KDD attack families, such as DoS, Probe, R2L, and U2R.
+- Evaluate threshold selection using precision-recall curves and operational false-alert budgets.
+- Test cross-dataset generalization on more recent intrusion-detection datasets such as UNSW-NB15, CIC-IDS2017, CIC-IDS2018, or Bot-IoT.
+- Compare CPU results with deployment on dedicated edge or neuromorphic hardware.
+- Add model explainability and attack-level error analysis to support security-analyst review.
+- Package the inference workflow as a lightweight service or edge-agent prototype.
 
-## Note
+## Project Scope
 
-This repository contains the full working pipeline used for the current experiments: preprocessing, model training, evaluation, and comparison.
+This repository provides the complete experimental pipeline used for the reported comparison:
+
+- Dataset preprocessing
+- Baseline MLP training
+- Spiking neural network training
+- Shared held-out evaluation
+- Metric computation
+- Saved prediction artifacts
+- Reproducible visualizations and comparison outputs
+
+It is designed as a research and portfolio proof of concept for neuromorphic approaches to edge-oriented cybersecurity analytics.
 
 ## License
 
