@@ -1,35 +1,33 @@
 import os
+import random
 import time
-import joblib
 import numpy as np
-from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, roc_auc_score
+import torch
+from config import RANDOM_STATE
+from sklearn.metrics import confusion_matrix
+
+
+def set_all_seeds(seed=RANDOM_STATE):
+    random.seed(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    if torch.cuda.is_available():
+        torch.cuda.manual_seed_all(seed)
+    os.environ["PYTHONHASHSEED"] = str(seed)
+    torch.backends.cudnn.deterministic = True
+    torch.backends.cudnn.benchmark = False
+    os.environ["CUBLAS_WORKSPACE_CONFIG"] = ":4096:8"
 
 
 def ensure_dir(path):
-    os.makedirs(path, exist_ok=True)
-
-
-def label_to_binary(series):
-    return series.apply(lambda x: 0 if str(x).lower() == "normal" else 1).astype(int)
-
-
-def compute_metrics(y_true, y_pred, y_score=None):
-    metrics = {
-        "accuracy": accuracy_score(y_true, y_pred),
-        "precision": precision_score(y_true, y_pred, zero_division=0),
-        "recall": recall_score(y_true, y_pred, zero_division=0),
-        "f1": f1_score(y_true, y_pred, zero_division=0),
-        "far": ((np.array(y_pred) == 1) & (np.array(y_true) == 0)).sum() / max((np.array(y_true) == 0).sum(), 1),
-    }
-    if y_score is not None and len(np.unique(y_true)) > 1:
-        metrics["roc_auc"] = roc_auc_score(y_true, y_score)
-    return metrics
-
-
-def save_artifact(obj, path):
-    ensure_dir(os.path.dirname(path))
-    joblib.dump(obj, path)
+    if path:
+        os.makedirs(path, exist_ok=True)
 
 
 def now_ms():
     return time.perf_counter() * 1000
+
+
+def compute_far(y_true, y_pred):
+    tn, fp, fn, tp = confusion_matrix(y_true, y_pred).ravel()
+    return fp / (fp + tn) if (fp + tn) > 0 else 0.0

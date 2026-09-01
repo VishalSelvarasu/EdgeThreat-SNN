@@ -27,16 +27,10 @@ def ensure_dir(path):
 
 
 def load_nsl_kdd(path):
-    df = pd.read_csv(
-        path,
-        sep="\t",
-        header=None,
-        names=NSL_KDD_COLUMNS,
-        engine="python"
-    )
-
+    # Your files are tab-delimited, not comma-delimited [69][70]
+    df = pd.read_csv(path, sep="\t", header=None,
+                     names=NSL_KDD_COLUMNS, engine="python")
     df = df.drop(columns=["difficulty"])
-
     df["label"] = (
         df["label"]
         .astype(str)
@@ -44,13 +38,9 @@ def load_nsl_kdd(path):
         .str.replace(".", "", regex=False)
         .str.lower()
     )
-
     df["label"] = (df["label"] != "normal").astype(int)
-
-    print(f"\nLoaded: {path}")
-    print(df["label"].value_counts())
-
     return df
+
 
 def main(args):
     train_df = load_nsl_kdd(args.train_input)
@@ -101,8 +91,11 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--train_input", default="data/raw/KDDTrain+.txt")
     parser.add_argument("--test_input", default="data/raw/KDDTest+.txt")
-    parser.add_argument("--train_output", default="data/processed/train_processed.csv")
-    parser.add_argument("--test_output", default="data/processed/test_processed.csv")
-    parser.add_argument("--preprocessor_out", default="results/saved_models/preprocessor.joblib")
+    parser.add_argument(
+        "--train_output", default="data/processed/train_processed.csv")
+    parser.add_argument(
+        "--test_output", default="data/processed/test_processed.csv")
+    parser.add_argument("--preprocessor_out",
+                        default="results/saved_models/preprocessor.joblib")
     args = parser.parse_args()
     main(args)
