@@ -8,7 +8,7 @@ import torch
 
 import config
 from data import load_dataset
-from models import DISPLAY_NAMES, EdgeThreatSNN
+from models import DISPLAY_NAMES, EdgeThreatSNNqq
 from utils import load_any
 
 
@@ -102,7 +102,8 @@ def main():
     for kind, r in results["models"].items():
         lines.append(f"| {DISPLAY_NAMES[kind]} | {r['latency_batch1_us']:,.0f} | {r['throughput_rows_per_s']:,.0f} | "
                      f"{r['macs_per_prediction']:,.0f} | {r['acs_per_prediction']:,.0f} | {r['estimated_energy_nj']:.1f} |")
-    (config.TABLE_DIR / "efficiency.md").write_text("\n".join(lines) + "\n")
+        (config.TABLE_DIR / "efficiency.md").write_text("\n".join(lines) +
+                                                        "\n", encoding="utf-8")
     print("\n".join(lines))
 
 

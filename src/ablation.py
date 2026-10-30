@@ -140,7 +140,8 @@ def report():
             f"{fmt(r['test_recall_at_far_1'], r['test_recall_at_far_1_std'])} | "
             f"{fmt(r['test_recall_at_far_5'], r['test_recall_at_far_5_std'])} | "
             f"{100 * r['hidden_spike_rate']:.1f}% | {r['n']} |")
-    (config.TABLE_DIR / "ablation.md").write_text("\n".join(lines) + "\n")
+        (config.TABLE_DIR / "ablation.md").write_text("\n".join(lines) +
+                                                      "\n", encoding="utf-8")
     print("\n".join(lines))
 
 
