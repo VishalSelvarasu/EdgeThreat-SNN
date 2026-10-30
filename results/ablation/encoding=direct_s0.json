@@ -1,0 +1,20 @@
+{
+ "factor": "encoding",
+ "value": "direct",
+ "seed": 0,
+ "settings": {
+  "time_steps": 25,
+  "beta": 0.9,
+  "encoding": "direct",
+  "log_scale": true
+ },
+ "best_epoch": 9,
+ "train_seconds": 73.9,
+ "val_loss": 0.008614477013047725,
+ "val_roc_auc": 0.9999288369953522,
+ "test_roc_auc": 0.913633390154295,
+ "test_recall_at_far_1": 0.42117977090314035,
+ "test_recall_at_far_5": 0.7218109561287306,
+ "test_f1": 0.8063758692314639,
+ "hidden_spike_rate": 0.12632903987757274
+}

@@ -1,0 +1,20 @@
+{
+ "factor": "beta",
+ "value": 0.95,
+ "seed": 0,
+ "settings": {
+  "time_steps": 25,
+  "beta": 0.95,
+  "encoding": "rate",
+  "log_scale": true
+ },
+ "best_epoch": 9,
+ "train_seconds": 101.3,
+ "val_loss": 0.014589501073257485,
+ "val_roc_auc": 0.9998917471344987,
+ "test_roc_auc": 0.9122465882888701,
+ "test_recall_at_far_1": 0.4219590119223876,
+ "test_recall_at_far_5": 0.6599392192004987,
+ "test_f1": 0.7887399946038313,
+ "hidden_spike_rate": 0.13938121007806956
+}
