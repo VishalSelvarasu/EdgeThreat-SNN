@@ -1,0 +1,28 @@
+{
+ "cpu": "AMD64 Family 25 Model 68 Stepping 1, AuthenticAMD",
+ "threads": 1,
+ "torch": "2.15.0+cpu",
+ "models": {
+  "mlp": {
+   "latency_batch1_us": 34.899998354376294,
+   "throughput_rows_per_s": 4255142.342564119,
+   "macs_per_prediction": 9920.0,
+   "acs_per_prediction": 0.0,
+   "estimated_energy_nj": 45.632
+  },
+  "mlp_small": {
+   "latency_batch1_us": 24.400000256719068,
+   "throughput_rows_per_s": 5329169.901100671,
+   "macs_per_prediction": 7936.0,
+   "acs_per_prediction": 0.0,
+   "estimated_energy_nj": 36.5056
+  },
+  "snn": {
+   "latency_batch1_us": 7113.550000212854,
+   "throughput_rows_per_s": 28615.74145095947,
+   "macs_per_prediction": 1650.0,
+   "acs_per_prediction": 17220.485716820443,
+   "estimated_energy_nj": 23.0884371451384
+  }
+ }
+}
