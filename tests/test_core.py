@@ -2,6 +2,7 @@ import joblib
 import numpy as np
 import pytest
 import torch
+import importlib
 
 from conftest import make_rows, write_rows
 from data import FAMILIES, NUMERIC, load_dataset, read_nsl_kdd
@@ -86,3 +87,9 @@ def test_predictor_end_to_end_and_mismatch(tmp_path, nsl_files):
     with pytest.raises(ValueError):
         Predictor(model_file=tmp_path / "wrong.pt",
                   preprocessor_file=tmp_path / "pre.joblib")
+
+
+@pytest.mark.parametrize("module", ["config", "data", "models", "utils", "train", "evaluate",
+                                    "efficiency", "ablation", "plot_results", "inference"])
+def test_every_module_imports(module):
+    importlib.import_module(module)
