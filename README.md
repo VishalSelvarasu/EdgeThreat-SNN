@@ -4,7 +4,7 @@ A controlled comparison of a spiking neural network (SNN) with conventional clas
 
 ## Key findings
 
-- **The SNN matches the MLPs but doesn't beat them.** ROC-AUC is 0.907 ± 0.004 for the SNN, 0.904 ± 0.008 for a 64-32 MLP, and 0.897 ± 0.008 for an MLP with exactly the SNN's 8,002 parameters. At a 5% false-alarm rate the SNN catches 64.1% of attacks, against 62.6% and 60.0%. No SNN–MLP difference is significant (Welch's t-test over 5 seeds; the smallest p is 0.054, against a corrected threshold of 0.004 for 12 comparisons).
+- **The SNN does not beat the MLPs.** ROC-AUC is 0.907 ± 0.004 for the SNN, 0.904 ± 0.008 for a 64-32 MLP, and 0.897 ± 0.008 for an MLP with exactly the SNN's 8,002 parameters. At a 5% false-alarm rate the SNN catches 64.1% of attacks, against 62.6% and 60.0%. No SNN–MLP difference is significant (Welch's t-test over 5 seeds; the smallest p is 0.054, against a corrected threshold of 0.004 for 12 comparisons).
 - **A random forest is the best detector.** It reaches ROC-AUC 0.959 and catches 76.5% of attacks at a 5% false-alarm rate (both p < 0.001 against the SNN). At that same rate it also catches 64% of attacks of types never seen in training, against 30–36% for the neural models.
 - **Feature scaling matters more than the neuron type.** In the sensitivity analysis, removing `log1p` from the heavy-tailed features lowers the SNN's ROC-AUC from 0.910 to 0.867, a far larger gap than any SNN–MLP difference.
 - **On a CPU the SNN is about 200× slower per prediction:** 7.1 ms against 35 µs on one thread of an AMD Ryzen 7 7435HS. An operation count estimates 23.1 nJ per prediction on event-driven hardware, against 36.5–45.6 nJ for the MLPs; that is an estimate, not a measurement. The hidden layer fires on 14.5% of time steps, so the network is not especially sparse.
@@ -26,7 +26,7 @@ A controlled comparison of a spiking neural network (SNN) with conventional clas
 
 **Data.** NSL-KDD (Tavallaee et al., 2009): 125,973 training and 22,544 test connections with 41 features each, downloaded and checksum-verified by `scripts/download_data.py` (see [data/README.md](data/README.md)). 15% of KDDTrain+ (stratified, fixed seed) is held out for validation, leaving 107,077 training and 18,896 validation rows. KDDTest+ is used only for the final evaluation. It is a shifted test set: 56.9% of it is attacks, against 46.5% in training, and 3,750 of its 12,833 attacks belong to 17 attack types that never occur in training.
 
-**Preprocessing** (`src/data.py`). The 17 numeric features whose training maximum is above 1 (bytes, durations, counts) are `log1p`-transformed. All 38 numeric features are then min-max scaled to [0, 1], fitted on the training split only and clipped. The 3 categorical features are one-hot encoded (3 + 70 + 11 columns), giving 122 inputs. Without `log1p`, heavy-tailed features almost never produce spikes under rate coding: 99.8% of `src_bytes` values scale below 0.001.
+**Preprocessing** (`src/data.py`). The 17 numeric features whose training maximum is above 1 (bytes, durations, counts) are `log1p`-transformed. All 38 numeric features are then min-max scaled to [0, 1], fitted on the training split only and clipped. The 3 categorical features are one-hot encoded (3 + 70 + 11 columns), giving 122 inputs. The one-hot vocabulary is the full set of protocol, service and flag values in KDDTrain+; KDDTest+ contains no others. Without `log1p`, heavy-tailed features almost never produce spikes under rate coding: 99.8% of `src_bytes` values scale below 0.001.
 
 **SNN** (`src/models.py`). Each scaled feature is a Bernoulli spike probability at each of 25 time steps. Hidden neurons have membrane decay β = 0.9 and threshold 1.0, and reset by subtraction. Training uses snnTorch's fast-sigmoid surrogate gradient (slope 25) with backpropagation through time. The two output neurons integrate without spiking; their membrane potential, averaged over time, is the logit. Test scores are averaged over 5 independent spike encodings.
 
@@ -53,7 +53,7 @@ KDDTest+, 22,544 connections. Threshold metrics use probability 0.5. Source: `re
 | Logistic regression | 1 | 0.743 | 0.912 | 0.607 | 0.729 | 0.077 | 0.776 | 0.861 | 0.313 | 0.380 |
 | Random forest | 5 | 0.776 ± 0.011 | 0.969 ± 0.001 | 0.627 ± 0.020 | 0.761 ± 0.015 | 0.027 ± 0.000 | 0.959 ± 0.002 | 0.961 ± 0.002 | 0.449 ± 0.015 | 0.765 ± 0.018 |
 
-- **The SNN and the MLPs are statistically tied** on every metric (see Statistical tests below).
+- **No significant difference was found between the SNN and the MLPs** on any metric (see Statistical tests below). This does not show they are equal; five seeds can only detect fairly large differences.
 - **The random forest ranks attacks best:** ROC-AUC 0.959 and recall at 5% FAR 0.765. At 1% FAR the non-linear models are close (0.374–0.452), and the forest's lead over the SNN there is not significant (p = 0.126).
 - **Logistic regression is clearly weaker** (ROC-AUC 0.776), so the task needs a non-linear model.
 - **Default thresholds sit at different false-alarm rates.** At probability 0.5 the neural models flag 6.7–7.1% of normal traffic and the forest 2.7%, so the accuracy, recall and F1 columns compare different operating points. Compare models with the ranking columns.
@@ -72,7 +72,7 @@ A threshold that flags 1% of normal traffic on the validation split flags 7.9–
 
 ### Attack families and unseen attack types
 
-Every model at a matched 5% false-alarm rate. Source: `results/tables/families.md`.
+Every model at a matched 5% false-alarm rate. That threshold is set on the test labels, so it compares models at the same operating point; a deployed detector could not choose it this way (see the calibrated table above). Source: `results/tables/families.md`.
 
 | Model | Seeds | DoS (n=7,458) | Probe (n=2,421) | R2L (n=2,754) | U2R (n=200) | Seen types (n=9,083) | Unseen types (n=3,750) |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
@@ -209,9 +209,13 @@ run_file.py            runs every step in order
 - Reduce input spikes with temporal or population coding; input spikes cause most of the SNN's operations.
 - Test on newer datasets (UNSW-NB15, CIC-IDS2017) and try multiclass detection.
 
-## Data and citation
+## References
 
-NSL-KDD: M. Tavallaee, E. Bagheri, W. Lu and A. A. Ghorbani, "A Detailed Analysis of the KDD CUP 99 Data Set", *IEEE CISDA*, 2009. Dataset page: <https://www.unb.ca/cic/datasets/nsl.html>.
+- M. Tavallaee, E. Bagheri, W. Lu and A. A. Ghorbani, "A Detailed Analysis of the KDD CUP 99 Data Set", *IEEE CISDA*, 2009. Dataset: <https://www.unb.ca/cic/datasets/nsl.html>.
+- J. K. Eshraghian et al., "Training Spiking Neural Networks Using Lessons From Deep Learning", *Proceedings of the IEEE*, vol. 111, no. 9, 2023 (snnTorch).
+- E. O. Neftci, H. Mostafa and F. Zenke, "Surrogate Gradient Learning in Spiking Neural Networks", *IEEE Signal Processing Magazine*, vol. 36, no. 6, 2019.
+- M. Horowitz, "Computing's energy problem (and what we can do about it)", *IEEE ISSCC*, 2014 (energy per operation).
+- B. L. Welch, "The generalization of 'Student's' problem when several different population variances are involved", *Biometrika*, vol. 34, 1947.
 
 ## License
 
